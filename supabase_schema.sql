@@ -203,89 +203,135 @@ returns boolean language sql security definer as $$
 $$;
 
 -- سياسات Profiles
+drop policy if exists "Users can read own profile or admins can read all" on public.profiles;
 create policy "Users can read own profile or admins can read all" on public.profiles
     for select using (auth.uid() = id or public.is_admin());
 
+drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile" on public.profiles
     for insert with check (auth.uid() = id);
 
+drop policy if exists "Admins can update all profiles" on public.profiles;
 create policy "Admins can update all profiles" on public.profiles
     for update using (public.is_admin());
 
 -- سياسات Orders
+drop policy if exists "Users can read own orders or admins read all" on public.orders;
 create policy "Users can read own orders or admins read all" on public.orders
     for select using (auth.uid() = user_id or public.is_admin());
 
+drop policy if exists "Users can insert own orders" on public.orders;
 create policy "Users can insert own orders" on public.orders
     for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Admins can update orders" on public.orders;
 create policy "Admins can update orders" on public.orders
     for update using (public.is_admin());
 
+drop policy if exists "Admins can delete orders" on public.orders;
 create policy "Admins can delete orders" on public.orders
     for delete using (public.is_admin());
 
 -- سياسات Balance Requests
+drop policy if exists "Users read own requests or admins read all" on public.balance_requests;
 create policy "Users read own requests or admins read all" on public.balance_requests
     for select using (auth.uid() = user_id or public.is_admin());
 
+drop policy if exists "Users insert own balance requests" on public.balance_requests;
 create policy "Users insert own balance requests" on public.balance_requests
     for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Admins update balance requests" on public.balance_requests;
 create policy "Admins update balance requests" on public.balance_requests
     for update using (public.is_admin());
 
+drop policy if exists "Admins delete balance requests" on public.balance_requests;
 create policy "Admins delete balance requests" on public.balance_requests
     for delete using (public.is_admin());
 
 -- سياسات Messages
+drop policy if exists "Users read own messages or admins read all" on public.messages;
 create policy "Users read own messages or admins read all" on public.messages
     for select using (auth.uid() = user_id or public.is_admin());
 
+drop policy if exists "Users insert messages" on public.messages;
 create policy "Users insert messages" on public.messages
     for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Admins update messages" on public.messages;
 create policy "Admins update messages" on public.messages
     for update using (public.is_admin());
 
+drop policy if exists "Admins delete messages" on public.messages;
 create policy "Admins delete messages" on public.messages
     for delete using (public.is_admin());
 
+drop policy if exists "Read message replies" on public.message_replies;
 create policy "Read message replies" on public.message_replies
     for select using (true);
 
+drop policy if exists "Insert admin replies" on public.message_replies;
 create policy "Insert admin replies" on public.message_replies
     for insert with check (public.is_admin());
 
+drop policy if exists "Read client replies" on public.message_client_replies;
 create policy "Read client replies" on public.message_client_replies
     for select using (true);
 
+drop policy if exists "Insert client replies" on public.message_client_replies;
 create policy "Insert client replies" on public.message_client_replies
     for insert with check (auth.uid() is not null);
 
 -- سياسات الجداول العامة للقراءة
+drop policy if exists "Public read faqs" on public.faqs;
 create policy "Public read faqs" on public.faqs for select using (true);
+
+drop policy if exists "Admins manage faqs" on public.faqs;
 create policy "Admins manage faqs" on public.faqs for all using (public.is_admin());
 
+drop policy if exists "Public read app_settings" on public.app_settings;
 create policy "Public read app_settings" on public.app_settings for select using (true);
+
+drop policy if exists "Admins manage app_settings" on public.app_settings;
 create policy "Admins manage app_settings" on public.app_settings for all using (public.is_admin());
 
+drop policy if exists "Public read currency_rates" on public.currency_rates;
 create policy "Public read currency_rates" on public.currency_rates for select using (true);
+
+drop policy if exists "Admins manage currency_rates" on public.currency_rates;
 create policy "Admins manage currency_rates" on public.currency_rates for all using (public.is_admin());
 
+drop policy if exists "Public read referral_tier_config" on public.referral_tier_config;
 create policy "Public read referral_tier_config" on public.referral_tier_config for select using (true);
+
+drop policy if exists "Admins manage referral_tier_config" on public.referral_tier_config;
 create policy "Admins manage referral_tier_config" on public.referral_tier_config for all using (public.is_admin());
 
+drop policy if exists "Public read service_points" on public.service_points;
 create policy "Public read service_points" on public.service_points for select using (true);
+
+drop policy if exists "Admins manage service_points" on public.service_points;
 create policy "Admins manage service_points" on public.service_points for all using (public.is_admin());
 
+drop policy if exists "Public read service_costs" on public.service_costs;
 create policy "Public read service_costs" on public.service_costs for select using (public.is_admin());
+
+drop policy if exists "Admins manage service_costs" on public.service_costs;
 create policy "Admins manage service_costs" on public.service_costs for all using (public.is_admin());
 
+drop policy if exists "Admins read profit_history" on public.profit_history;
 create policy "Admins read profit_history" on public.profit_history for all using (public.is_admin());
+
+drop policy if exists "Public read discount_codes" on public.discount_codes;
 create policy "Public read discount_codes" on public.discount_codes for select using (true);
+
+drop policy if exists "Admins manage discount_codes" on public.discount_codes;
 create policy "Admins manage discount_codes" on public.discount_codes for all using (public.is_admin());
+
+drop policy if exists "Public presence manage" on public.online_sessions;
 create policy "Public presence manage" on public.online_sessions for all using (true);
+
+drop policy if exists "User read own referral earnings" on public.referral_earnings;
 create policy "User read own referral earnings" on public.referral_earnings for select using (auth.uid() = referrer_id or public.is_admin());
 
 -- ==============================================================================
@@ -405,9 +451,9 @@ begin
     -- خصم النقاط
     if p_points_used > 0 then
         if v_user.points < p_points_used then raise exception 'رصيد النقاط غير كافٍ'; end if;
-        begin
-            select value::numeric into v_point_val from public.app_settings where key = 'point_value_egp';
-        exception when others then v_point_val := 0.05;
+        select coalesce(value::numeric, 0.05) into v_point_val from public.app_settings where key = 'point_value_egp';
+        if v_point_val is null then
+            v_point_val := 0.05;
         end if;
         v_discount_val := p_points_used * v_point_val;
         v_base_total := greatest(0, v_base_total - v_discount_val);
@@ -908,10 +954,18 @@ insert into storage.buckets (id, name, public) values
 on conflict (id) do nothing;
 
 -- سياسات التخزين للصور
+drop policy if exists "Public Access for avatars" on storage.objects;
 create policy "Public Access for avatars" on storage.objects for select using (bucket_id = 'avatars');
+
+drop policy if exists "Auth upload avatar" on storage.objects;
 create policy "Auth upload avatar" on storage.objects for insert with check (bucket_id = 'avatars' and auth.uid() is not null);
+
+drop policy if exists "Auth update avatar" on storage.objects;
 create policy "Auth update avatar" on storage.objects for update using (bucket_id = 'avatars' and auth.uid() is not null);
 
 -- سياسات إيصالات الدفع
+drop policy if exists "Public Access for proofs" on storage.objects;
 create policy "Public Access for proofs" on storage.objects for select using (bucket_id = 'payment-proofs');
+
+drop policy if exists "Auth upload proofs" on storage.objects;
 create policy "Auth upload proofs" on storage.objects for insert with check (bucket_id = 'payment-proofs' and auth.uid() is not null);
