@@ -3,6 +3,6 @@
 // ==============================================================================
 // إذا قمت بإنشاء مشروع جديد على Supabase، فقط قم بتغيير الرابط والمفتاح العام هنا:
 window.SUPABASE_CONFIG = {
-  URL: "https://lgndbrakixptfluiorcv.supabase.co",
-  ANON_KEY: "sb_publishable_EXVBeYA-CYT8j0OTBnww_Q_v8M70JDU"
+  URL: "https://mbpavrppkzvanmghlozl.supabase.co",
+  ANON_KEY: "sb_publishable_eJ5YZ7B6YrLmx6x24zckUA_b81P5xyH"
 };
