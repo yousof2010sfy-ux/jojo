@@ -1,8 +1,10 @@
 // =========================================================
-// Taf3el - Database Layer (Supabase)
+// Taf3el / Refresh - Database Layer (Supabase)
 // =========================================================
-const SUPABASE_URL = "https://lgndbrakixptfluiorcv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_EXVBeYA-CYT8j0OTBnww_Q_v8M70JDU";
+const SUPABASE_URL = (typeof window !== "undefined" && window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.URL) 
+  || "https://lgndbrakixptfluiorcv.supabase.co";
+const SUPABASE_ANON_KEY = (typeof window !== "undefined" && window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.ANON_KEY) 
+  || "sb_publishable_EXVBeYA-CYT8j0OTBnww_Q_v8M70JDU";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
