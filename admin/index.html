@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>لوحة التحكم - Refresh</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/assets/css/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/db.js"></script>
+    <script src="/assets/js/shared.js"></script>
+    <script src="/assets/js/admin.js"></script>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between header-content">
+                <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                    <a href="/index.html" class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold text-glow">Refresh</h1>
+                        <span class="text-xs bg-red-600/80 text-white px-2 py-0.5 rounded font-bold">ADMIN</span>
+                    </a>
+                </div>
+                
+                <nav class="flex items-center space-x-4 rtl:space-x-reverse">
+                    <a href="/index.html" class="nav-btn hover:text-blue-400 transition-colors" data-i18n="nav_home">🏠 الرئيسية</a>
+                    <button class="lang-toggle-btn" onclick="toggleLanguage()" title="Language / اللغة" id="langToggleBtn">🌐 AR</button>
+                    <button onclick="logout()" class="text-xs bg-slate-700 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors text-red-300">🚪 خروج</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Body -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Auth Error Banner (if not admin) -->
+        <div id="adminAuthError" class="hidden text-center py-16 bg-slate-800/40 rounded-xl p-8 border border-red-500/50 max-w-lg mx-auto shadow-2xl">
+            <div class="text-6xl mb-4">⛔</div>
+            <h2 class="text-2xl font-bold text-red-400 mb-2">غير مصرح بالدخول</h2>
+            <p class="text-slate-400 mb-6">هذه الصفحة مخصصة لمدير المنصة فقط. يرجى تسجيل الدخول بحساب مسؤول.</p>
+            <div class="flex justify-center gap-4">
+                <button onclick="showLoginModal()" class="btn-primary px-6 py-2 rounded-lg">تسجيل الدخول</button>
+                <a href="/index.html" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg">العودة للرئيسية</a>
+            </div>
+        </div>
+
+        <!-- Main Dashboard View -->
+        <div id="adminMainContent" class="hidden space-y-6">
+            <!-- Top Stats Ribbon -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-5 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 block mb-1">إجمالي الطلبات</span>
+                    <div class="text-3xl font-extrabold text-blue-400" id="statTotalOrders">0</div>
+                </div>
+                <div class="bg-slate-800/60 p-5 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 block mb-1">طلبات مكتملة اليوم</span>
+                    <div class="text-3xl font-extrabold text-green-400" id="statCompletedToday">0</div>
+                </div>
+                <div class="bg-slate-800/60 p-5 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 block mb-1">إجمالي العملاء</span>
+                    <div class="text-3xl font-extrabold text-purple-400" id="statTotalCustomers">0</div>
+                </div>
+                <div class="bg-slate-800/60 p-5 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 block mb-1">المتواجدون الآن</span>
+                    <div class="text-3xl font-extrabold text-yellow-400" id="statOnlineUsers">1</div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-slate-700 gap-2 overflow-x-auto pb-1 text-sm">
+                <button id="tab-btn-orders" onclick="switchAdminTab('orders')" class="admin-tab-btn px-4 py-2 border-b-2 font-bold border-blue-500 text-blue-400">📦 الطلبات</button>
+                <button id="tab-btn-balance" onclick="switchAdminTab('balance')" class="admin-tab-btn px-4 py-2 border-b-2 font-bold border-transparent text-slate-400 hover:text-white">💳 طلبات الشحن</button>
+                <button id="tab-btn-customers" onclick="switchAdminTab('customers')" class="admin-tab-btn px-4 py-2 border-b-2 font-bold border-transparent text-slate-400 hover:text-white">👥 العملاء</button>
+                <button id="tab-btn-messages" onclick="switchAdminTab('messages')" class="admin-tab-btn px-4 py-2 border-b-2 font-bold border-transparent text-slate-400 hover:text-white">🎧 تذاكر الدعم</button>
+                <button id="tab-btn-settings" onclick="switchAdminTab('settings')" class="admin-tab-btn px-4 py-2 border-b-2 font-bold border-transparent text-slate-400 hover:text-white">⚙️ الإعدادات</button>
+            </div>
+
+            <!-- Tab 1: Orders -->
+            <div id="tab-orders" class="admin-tab-content space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-4 bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="adminOrderSearch" class="form-input text-sm flex-1 min-w-[200px]" placeholder="🔍 ابحث برقم الطلب، الخدمة، أو الرابط...">
+                    <select id="adminOrderFilter" class="form-select text-sm">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending">في الانتظار</option>
+                        <option value="processing">قيد التنفيذ</option>
+                        <option value="completed">مكتمل</option>
+                        <option value="cancelled">ملغي</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto bg-slate-800/40 rounded-xl border border-slate-700">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-900/60 text-slate-400 text-xs border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">رقم الطلب</th>
+                                <th class="p-3">الخدمة</th>
+                                <th class="p-3">الكمية</th>
+                                <th class="p-3">السعر</th>
+                                <th class="p-3">الرابط</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3 text-left">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersTable">
+                            <tr><td colspan="7" class="text-center py-6 text-slate-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Balance Requests -->
+            <div id="tab-balance" class="admin-tab-content hidden space-y-4">
+                <div class="overflow-x-auto bg-slate-800/40 rounded-xl border border-slate-700">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-900/60 text-slate-400 text-xs border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">رقم الطلب</th>
+                                <th class="p-3">المبلغ</th>
+                                <th class="p-3">طريقة الدفع</th>
+                                <th class="p-3">رقم/يوزر المحول</th>
+                                <th class="p-3">الوقت</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3 text-left">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminBalanceRequestsTable">
+                            <tr><td colspan="7" class="text-center py-6 text-slate-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: Customers -->
+            <div id="tab-customers" class="admin-tab-content hidden space-y-4">
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <input type="text" id="adminCustomerSearch" class="form-input text-sm w-full" placeholder="🔍 ابحث بالاسم، رقم التليفون، أو اليوزر نيم...">
+                </div>
+                <div class="overflow-x-auto bg-slate-800/40 rounded-xl border border-slate-700">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-900/60 text-slate-400 text-xs border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">الاسم</th>
+                                <th class="p-3">الهاتف</th>
+                                <th class="p-3">اليوزر</th>
+                                <th class="p-3">الرصيد</th>
+                                <th class="p-3">النقاط</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3 text-left">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminCustomersTable">
+                            <tr><td colspan="7" class="text-center py-6 text-slate-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 4: Messages / Support -->
+            <div id="tab-messages" class="admin-tab-content hidden space-y-4">
+                <div id="adminMessagesList">
+                    <div class="text-center py-6 text-slate-400">جاري التحميل...</div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Settings -->
+            <div id="tab-settings" class="admin-tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Point Value Config -->
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 text-yellow-400">🎯 قيمة النقطة بالجنيه (EGP)</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="configPointValue" step="0.01" class="form-input flex-1" placeholder="مثال: 0.05">
+                        <button onclick="savePointValueSetting()" class="btn-primary px-4 py-2 font-bold">حفظ</button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">القيمة الحالية التي يحصل عليها المستخدم مقابل كل نقطة عند الشراء.</p>
+                </div>
+
+                <!-- Generate Discount Code -->
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 text-green-400">🎟️ توليد كود خصم جديد</h3>
+                    <form id="addDiscountForm" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">نسبة الخصم %</label>
+                                <input type="number" id="discountPercent" class="form-input text-sm w-full" min="1" max="100" placeholder="10" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">تاريخ الانتهاء (اختياري)</label>
+                                <input type="date" id="discountExpiresAt" class="form-input text-sm w-full">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary w-full py-2 font-bold text-sm">توليد كود الخصم</button>
+                    </form>
+                    <div class="mt-4" id="adminDiscountsList"></div>
+                </div>
+
+                <!-- FAQ Manager -->
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 md:col-span-2">
+                    <h3 class="font-bold text-lg mb-4 text-blue-400">❓ إدارة الأسئلة الشائعة (FAQ)</h3>
+                    <form id="addFaqForm" class="space-y-3 mb-6 bg-slate-900/40 p-4 rounded-lg border border-slate-700">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="newFaqQuestion" class="form-input text-sm" placeholder="السؤال..." required>
+                            <input type="text" id="newFaqKeywords" class="form-input text-sm" placeholder="الكلمات المفتاحية (مفصولة بفاصلة)...">
+                        </div>
+                        <textarea id="newFaqAnswer" class="form-input text-sm w-full" rows="2" placeholder="الإجابة..." required></textarea>
+                        <button type="submit" class="btn-primary px-6 py-2 text-sm font-bold">إضافة سؤال جديد</button>
+                    </form>
+                    <div id="adminFaqsList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modals -->
+    <div id="loginModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="auth-form">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold mb-2">🔑 تسجيل دخول المسؤول</h2>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">رقم الهاتف أو اليوزر نيم</label>
+                    <input type="text" id="loginPhone" class="auth-input" placeholder="أدخل رقم هاتفك أو اليوزر" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="loginPassword" class="auth-input" placeholder="أدخل كلمة المرور" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn">تسجيل الدخول</button>
+            </form>
+            <button onclick="hideLoginModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+        </div>
+    </div>
+</body>
+</html>

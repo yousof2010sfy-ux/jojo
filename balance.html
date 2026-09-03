@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>شحن الرصيد - Refresh</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/assets/css/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/db.js"></script>
+    <script src="/assets/js/shared.js"></script>
+    <script src="/assets/js/balance.js"></script>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between header-content">
+                <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                    <div id="logoAccountWrapper" class="hidden relative">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors" id="logoUserAvatar" onclick="toggleLogoUserDropdown()">
+                            <span class="text-sm font-bold" id="logoUserInitial">U</span>
+                        </div>
+                        <div id="logoUserDropdown" class="user-dropdown hidden">
+                            <div class="p-4 border-b border-slate-600">
+                                <div class="font-semibold" id="logoUserName">المستخدم</div>
+                                <div class="text-xs text-slate-400" id="logoUserPhone"></div>
+                            </div>
+                            <div class="p-2">
+                                <a href="/profile.html" class="block w-full text-right px-4 py-2 hover:bg-slate-600 rounded-lg transition-colors" data-i18n="profile_title">
+                                    👤 الملف الشخصي
+                                </a>
+                                <hr class="my-2 border-slate-600">
+                                <button onclick="logout()" class="w-full text-right px-4 py-2 hover:bg-red-600 rounded-lg transition-colors text-red-400" data-i18n="logout_btn">
+                                    🚪 تسجيل الخروج
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/index.html" class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold text-glow">Refresh</h1>
+                    </a>
+                </div>
+                
+                <nav class="hidden md:flex items-center space-x-6 rtl:space-x-reverse nav-links">
+                    <a href="/index.html" class="nav-btn hover:text-blue-400 transition-colors pb-1" data-i18n="nav_home">🏠 الرئيسية</a>
+                    <a href="/orders.html" class="nav-btn hover:text-blue-400 transition-colors pb-1" data-i18n="nav_orders">📦 طلباتي</a>
+                    <a href="/referral.html" class="nav-btn hover:text-purple-400 transition-colors pb-1" data-i18n="nav_referral">🎁 دعوة صديق</a>
+                    <button onclick="showAppDownloadModal()" class="nav-btn hover:text-green-400 transition-colors pb-1" data-i18n="nav_app">📱 تحميل التطبيق</button>
+                    <a href="/contact.html" class="nav-btn hover:text-blue-400 transition-colors pb-1 relative">
+                        <span data-i18n="nav_support">🎧 الدعم الفني</span>
+                    </a>
+                    <a id="adminNav" class="nav-btn hover:text-red-400 hidden transition-colors pb-1" href="/admin/index.html" data-i18n="nav_admin_panel">
+                        ⚙️ لوحة التحكم
+                    </a>
+                </nav>
+
+                <div class="flex items-center space-x-4 rtl:space-x-reverse user-actions">
+                    <button class="lang-toggle-btn" onclick="toggleLanguage()" title="Language / اللغة" id="langToggleBtn">🌐 AR</button>
+                    <select class="lang-toggle-btn" onchange="setCurrency(this.value)" id="currencySelect" title="العملة" style="cursor:pointer;">
+                        <option value="EGP">🇪🇬 EGP</option>
+                        <option value="SAR">🇸🇦 SAR</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="AED">🇦🇪 AED</option>
+                        <option value="KWD">🇰🇼 KWD</option>
+                        <option value="QAR">🇶🇦 QAR</option>
+                        <option value="JOD">🇯🇴 JOD</option>
+                    </select>
+
+                    <div id="userProfile" class="hidden flex items-center space-x-4 rtl:space-x-reverse relative">
+                        <div class="balance-card px-4 py-2 rounded-lg">
+                            <span class="text-sm" data-i18n="balance_label">الرصيد: </span>
+                            <span class="font-bold" id="userBalance">0</span>
+                        </div>
+                        <button onclick="showAdWatchModal()" class="px-3 py-2 rounded-lg font-semibold text-sm" style="background:linear-gradient(135deg,#f59e0b,#d97706);" title="شاهد إعلان واكسب نقط">
+                            🎬 <span id="userPoints">0</span> <span data-i18n="points_unit">نقطة</span>
+                        </button>
+                    </div>
+                    
+                    <div id="authButtons" class="flex space-x-2 rtl:space-x-reverse">
+                        <button onclick="showLoginModal()" class="btn-primary px-4 py-2 rounded-lg" data-i18n="header_login_btn">
+                            🔑 تسجيل الدخول
+                        </button>
+                        <button onclick="showSignupModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors" data-i18n="header_signup_btn">
+                            📝 إنشاء حساب
+                        </button>
+                    </div>
+
+                    <button class="mobile-menu-btn relative" onclick="toggleMobileMenu()" aria-label="القائمة">
+                        <span id="mobileMenuIcon">☰</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden">
+                <div class="flex items-center gap-3 mb-3">
+                    <button class="lang-toggle-btn" onclick="toggleLanguage()" title="Language / اللغة" id="langToggleBtnMobile">🌐 AR</button>
+                    <select class="lang-toggle-btn" onchange="setCurrency(this.value)" id="currencySelectMobile" title="العملة" style="cursor:pointer;">
+                        <option value="EGP">🇪🇬 EGP</option>
+                        <option value="SAR">🇸🇦 SAR</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="AED">🇦🇪 AED</option>
+                        <option value="KWD">🇰🇼 KWD</option>
+                        <option value="QAR">🇶🇦 QAR</option>
+                        <option value="JOD">JOD</option>
+                    </select>
+                </div>
+                <div id="accountNavWrapperMobile" class="hidden mb-2">
+                    <a href="/profile.html" class="nav-btn block" data-i18n="profile_title">👤 الملف الشخصي</a>
+                    <button onclick="logout(); closeMobileMenu();" class="nav-btn block text-red-400" data-i18n="logout_btn">🚪 تسجيل الخروج</button>
+                </div>
+                <a href="/index.html" class="nav-btn block" data-i18n="nav_home">🏠 الرئيسية</a>
+                <a href="/orders.html" class="nav-btn block" data-i18n="nav_orders">📦 طلباتي</a>
+                <a href="/referral.html" class="nav-btn block" data-i18n="nav_referral">🎁 دعوة صديق</a>
+                <a href="/balance.html" class="nav-btn block text-blue-400" data-i18n="topup_balance_btn">💳 شحن الرصيد</a>
+                <button onclick="showAppDownloadModal(); closeMobileMenu();" class="nav-btn block" data-i18n="nav_app">📱 تحميل التطبيق</button>
+                <button onclick="showAdWatchModal(); closeMobileMenu();" class="nav-btn block" data-i18n="earn_points_btn">🎬 اكسب نقط</button>
+                <a href="/contact.html" class="nav-btn block relative">
+                    <span data-i18n="nav_support">🎧 الدعم الفني</span>
+                </a>
+                <a id="adminNavMobile" href="/admin/index.html" class="nav-btn hidden block text-red-400" data-i18n="nav_admin_panel">
+                    ⚙️ لوحة التحكم
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Balance Page Content -->
+    <main class="container mx-auto px-4 py-8 max-w-xl">
+        <h2 class="text-3xl font-bold text-center mb-6" data-i18n="balance_modal_title">💰 شحن الرصيد</h2>
+        
+        <!-- Current Balance Highlight -->
+        <div class="bg-slate-800/60 rounded-xl p-6 mb-6 text-center border border-slate-700 shadow-xl">
+            <span class="text-sm text-slate-400 block mb-1" data-i18n="balance_label">الرصيد الحالي:</span>
+            <div class="text-4xl font-extrabold text-green-400" id="currentBalanceDisplay">0.00 ج.م</div>
+        </div>
+
+        <!-- Top-up Form -->
+        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 shadow-xl mb-8">
+            <form id="balanceForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="charge_amount_label">المبلغ (جنيه)</label>
+                    <input type="number" id="chargeAmount" class="form-input w-full" placeholder="مثال: 50" min="5" required step="0.01">
+                    <p class="text-xs text-slate-400 mt-1">الحد الأدنى للشحن هو 5 جنيه مصري</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="payment_method_label">طريقة الدفع</label>
+                    <select id="paymentMethod" class="form-select w-full" required onchange="togglePaymentMethodInfo()">
+                        <option value="" data-i18n="select_payment_method_option">اختر طريقة الدفع</option>
+                        <option value="vodafone_cash" data-i18n="vodafone_cash_option">فودافون كاش</option>
+                        <option value="telda" data-i18n="telda_option">تيلدا (Telda)</option>
+                    </select>
+                </div>
+                
+                <div id="vodafoneInfo" class="hidden bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+                    <p class="text-sm text-slate-300 mb-1" data-i18n="vodafone_transfer_instruction">حوّل مبلغ الشحن على رقم فودافون كاش:</p>
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <p class="font-bold text-green-400 text-lg font-mono" id="vodafoneCashNumber">01013062296</p>
+                        <button type="button" class="copy-btn" onclick="copyToClipboard('01013062296', this)">
+                            <i class="fa-regular fa-copy"></i><span data-i18n="copy_btn">نسخ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="teldaInfo" class="hidden bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+                    <p class="text-sm text-slate-300 mb-1" data-i18n="telda_transfer_instruction">حوّل مبلغ الشحن على يوزر تيلدا:</p>
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <p class="font-bold text-green-400 text-lg font-mono" id="teldaUsername">joefix</p>
+                        <button type="button" class="copy-btn" onclick="copyToClipboard('joefix', this)">
+                            <i class="fa-regular fa-copy"></i><span data-i18n="copy_btn">نسخ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2" id="transactionIdLabel" data-i18n="transaction_id_label">رقم الهاتف الذي تم التحويل منه</label>
+                    <input type="text" id="transactionId" class="form-input w-full" placeholder="أدخل رقم الهاتف أو اليوزر" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="payment_proof_label">صورة تأكيد التحويل (اختياري)</label>
+                    <input type="file" id="paymentProofFile" accept="image/*" class="form-input w-full">
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="payment_proof_hint">إرفاق سكرين شوت للتحويل (فودافون كاش أو تيلدا) بيسرّع تأكيد الطلب.</p>
+                </div>
+                <button type="submit" id="balanceSubmitBtn" class="btn-primary w-full py-3 text-lg font-bold" data-i18n="balance_submit_btn">إرسال طلب الشحن</button>
+            </form>
+        </div>
+
+        <!-- Previous Balance Top-Up Requests -->
+        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 shadow-xl">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>📋</span>
+                <span>سجل طلبات الشحن السابقة</span>
+            </h3>
+            <div id="balanceHistoryList" class="space-y-3">
+                <p class="text-slate-400 text-center py-4">جاري التحميل...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modals -->
+    <div id="loginModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="auth-form">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold mb-2" data-i18n="login_title">🔑 تسجيل الدخول</h2>
+                <p class="text-slate-400" data-i18n="login_subtitle">مرحباً بعودتك إلى Refresh</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="phone_or_username_label">رقم الهاتف أو اليوزر نيم</label>
+                    <input type="text" id="loginPhone" class="auth-input" placeholder="أدخل رقم هاتفك أو اليوزر نيم" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="password_label">كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="loginPassword" class="auth-input" placeholder="أدخل كلمة المرور" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn" data-i18n="login_btn">تسجيل الدخول</button>
+            </form>
+            <div class="text-center mt-4">
+                <p class="text-slate-400"><span data-i18n="no_account">ليس لديك حساب؟</span>
+                    <a href="#" onclick="hideLoginModal(); showSignupModal();" class="auth-link text-blue-400" data-i18n="signup_link">إنشاء حساب جديد</a>
+                </p>
+            </div>
+            <button onclick="hideLoginModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+        </div>
+    </div>
+
+    <div id="signupModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="signup-form-improved">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold mb-2" data-i18n="signup_title">📝 إنشاء حساب جديد</h2>
+            </div>
+            <form id="signupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="full_name_label">الاسم الكامل</label>
+                    <input type="text" id="signupName" class="auth-input" placeholder="أدخل اسمك الكامل" maxlength="60" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="phone_label">رقم الهاتف</label>
+                    <input type="tel" id="signupPhone" class="auth-input" placeholder="01xxxxxxxxx" required maxlength="11">
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="phone_format_hint">لازم يكون 11 رقم ويبدأ بـ 01</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="username_label">اليوزر نيم</label>
+                    <input type="text" id="signupUsername" class="auth-input" placeholder="اختر يوزر نيم خاص بيك" required minlength="3" maxlength="20" autocomplete="off">
+                    <p id="usernameCheckStatus" class="text-xs mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="password_label">كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="signupPassword" class="auth-input" placeholder="أدخل كلمة مرور قوية" required minlength="6" maxlength="15" oninput="updatePasswordStrengthMeter('signupPassword', 'signupPasswordStrength')">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)">👁️</button>
+                    </div>
+                    <div class="password-strength-meter hidden" id="signupPasswordStrength">
+                        <div class="password-strength-bar-track"><div class="password-strength-bar-fill"></div></div>
+                        <span class="password-strength-label"></span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="confirm_password_label">تأكيد كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="signupConfirmPassword" class="auth-input" placeholder="أعد إدخال كلمة المرور" required minlength="6" maxlength="15">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)">👁️</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="referral_code_label">كود الدعوة (اختياري)</label>
+                    <input type="text" id="signupReferralCode" class="auth-input" placeholder="كود الدعوة">
+                </div>
+                <button type="submit" id="signupSubmitBtn" class="auth-btn" data-i18n="signup_btn" disabled>إنشاء الحساب</button>
+            </form>
+            <div class="text-center mt-4">
+                <p class="text-slate-400"><span data-i18n="have_account">لديك حساب بالفعل؟</span>
+                    <a href="#" onclick="hideSignupModal(); showLoginModal();" class="auth-link text-blue-400" data-i18n="login_link">تسجيل الدخول</a>
+                </p>
+            </div>
+            <button onclick="hideSignupModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+        </div>
+    </div>
+</body>
+</html>

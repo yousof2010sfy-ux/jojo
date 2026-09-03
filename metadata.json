@@ -1,0 +1,6 @@
+{
+  "name": "Refresh - Social Media Services",
+  "description": "منصة تزويد خدمات السوشيال ميديا وتفاعل تيك توك",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

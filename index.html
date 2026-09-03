@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="format-detection" content="telephone=no">
+
+    <meta name="description" content="Refresh - منصة تزويد خدمات السوشيال ميديا (تيك توك وغيرها) بأسعار منافسة وجودة عالية وتنفيذ سريع. شحن رصيد سهل عبر فودافون كاش أو تيلدا.">
+    <link rel="canonical" href="https://refresh-tau.vercel.app/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://refresh-tau.vercel.app/">
+    <meta property="og:title" content="Refresh - منصة خدمات السوشيال ميديا">
+    <meta property="og:description" content="زيادة مشاهدات، لايكات، متابعين ومشاركات تيك توك بأسعار منافسة وتنفيذ سريع.">
+    <meta property="og:locale" content="ar_AR">
+
+    <title>Refresh - Ultimate Social Media Services Platform</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Extracted External Stylesheet -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    
+    <!-- Supabase Client & Database Layer -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/db.js"></script>
+    <script src="/assets/js/shared.js"></script>
+    <script src="/assets/js/index.js"></script>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Quick Admin Float Button -->
+    <div class="fixed bottom-4 left-4 z-50">
+        <div class="admin-star" onclick="showAdminModal()" title="لوحة التحكم">
+            <span class="text-2xl">⭐</span>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between header-content">
+                <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                    <div id="logoAccountWrapper" class="hidden relative">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors" id="logoUserAvatar" onclick="toggleLogoUserDropdown()">
+                            <span class="text-sm font-bold" id="logoUserInitial">U</span>
+                        </div>
+                        <div id="logoUserDropdown" class="user-dropdown hidden">
+                            <div class="p-4 border-b border-slate-600">
+                                <div class="font-semibold" id="logoUserName">المستخدم</div>
+                                <div class="text-xs text-slate-400" id="logoUserPhone"></div>
+                            </div>
+                            <div class="p-2">
+                                <a href="/profile.html" class="block w-full text-right px-4 py-2 hover:bg-slate-600 rounded-lg transition-colors" data-i18n="profile_title">
+                                    👤 الملف الشخصي
+                                </a>
+                                <hr class="my-2 border-slate-600">
+                                <button onclick="logout()" class="w-full text-right px-4 py-2 hover:bg-red-600 rounded-lg transition-colors text-red-400" data-i18n="logout_btn">
+                                    🚪 تسجيل الخروج
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/index.html" class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold text-glow">Refresh</h1>
+                    </a>
+                    <span class="text-sm text-slate-400 hidden sm:inline" data-i18n="header_tagline">منصة تزويد خدمات السوشيال ميديا</span>
+                </div>
+                
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-6 rtl:space-x-reverse nav-links">
+                    <a href="/index.html" class="nav-btn text-blue-400 border-b-2 border-blue-400 pb-1" data-i18n="nav_home">🏠 الرئيسية</a>
+                    <a href="/orders.html" class="nav-btn hover:text-blue-400 transition-colors pb-1" data-i18n="nav_orders">📦 طلباتي</a>
+                    <a href="/referral.html" class="nav-btn hover:text-purple-400 transition-colors pb-1" data-i18n="nav_referral">🎁 دعوة صديق</a>
+                    <button onclick="showAppDownloadModal()" class="nav-btn hover:text-green-400 transition-colors pb-1" data-i18n="nav_app">📱 تحميل التطبيق</button>
+                    <a href="/contact.html" class="nav-btn hover:text-blue-400 transition-colors pb-1 relative">
+                        <span data-i18n="nav_support">🎧 الدعم الفني</span>
+                    </a>
+                    <a id="adminNav" class="nav-btn hover:text-red-400 hidden transition-colors pb-1" href="/admin/index.html" data-i18n="nav_admin_panel">
+                        ⚙️ لوحة التحكم
+                    </a>
+                </nav>
+
+                <!-- Header Actions & Auth -->
+                <div class="flex items-center space-x-4 rtl:space-x-reverse user-actions">
+                    <button class="lang-toggle-btn" onclick="toggleLanguage()" title="Language / اللغة" id="langToggleBtn">🌐 AR</button>
+                    <select class="lang-toggle-btn" onchange="setCurrency(this.value)" id="currencySelect" title="العملة" data-i18n-title="currency_label" style="cursor:pointer;">
+                        <option value="EGP">🇪🇬 EGP</option>
+                        <option value="SAR">🇸🇦 SAR</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="AED">🇦🇪 AED</option>
+                        <option value="KWD">🇰🇼 KWD</option>
+                        <option value="QAR">🇶🇦 QAR</option>
+                        <option value="JOD">🇯🇴 JOD</option>
+                    </select>
+
+                    <div id="userProfile" class="hidden flex items-center space-x-4 rtl:space-x-reverse relative">
+                        <div class="balance-card px-4 py-2 rounded-lg">
+                            <span class="text-sm" data-i18n="balance_label">الرصيد: </span>
+                            <span class="font-bold" id="userBalance">0</span>
+                        </div>
+                        <button onclick="showAdWatchModal()" class="px-3 py-2 rounded-lg font-semibold text-sm" style="background:linear-gradient(135deg,#f59e0b,#d97706);" title="شاهد إعلان واكسب نقط" data-i18n-title="watch_ad_earn_points_title">
+                            🎬 <span id="userPoints">0</span> <span data-i18n="points_unit">نقطة</span>
+                        </button>
+                        <a href="/balance.html" class="btn-primary px-4 py-2 rounded-lg inline-block" data-i18n="topup_balance_btn">💳 شحن الرصيد</a>
+                    </div>
+                    
+                    <div id="authButtons" class="flex space-x-2 rtl:space-x-reverse">
+                        <button onclick="showLoginModal()" class="btn-primary px-4 py-2 rounded-lg" data-i18n="header_login_btn">
+                            🔑 تسجيل الدخول
+                        </button>
+                        <button onclick="showSignupModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors" data-i18n="header_signup_btn">
+                            📝 إنشاء حساب
+                        </button>
+                    </div>
+
+                    <button class="mobile-menu-btn relative" onclick="toggleMobileMenu()" aria-label="القائمة" data-i18n-aria="menu_aria_label">
+                        <span id="mobileMenuIcon">☰</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Menu -->
+            <div id="mobileMenu" class="hidden">
+                <div class="flex items-center gap-3 mb-3">
+                    <button class="lang-toggle-btn" onclick="toggleLanguage()" title="Language / اللغة" id="langToggleBtnMobile">🌐 AR</button>
+                    <select class="lang-toggle-btn" onchange="setCurrency(this.value)" id="currencySelectMobile" title="العملة" data-i18n-title="currency_label" style="cursor:pointer;">
+                        <option value="EGP">🇪🇬 EGP</option>
+                        <option value="SAR">🇸🇦 SAR</option>
+                        <option value="USD">🇺🇸 USD</option>
+                        <option value="EUR">🇪🇺 EUR</option>
+                        <option value="AED">🇦🇪 AED</option>
+                        <option value="KWD">🇰🇼 KWD</option>
+                        <option value="QAR">🇶🇦 QAR</option>
+                        <option value="JOD">🇯🇴 JOD</option>
+                    </select>
+                </div>
+                <div id="accountNavWrapperMobile" class="hidden mb-2">
+                    <a href="/profile.html" class="nav-btn block" data-i18n="profile_title">👤 الملف الشخصي</a>
+                    <button onclick="logout(); closeMobileMenu();" class="nav-btn block text-red-400" data-i18n="logout_btn">🚪 تسجيل الخروج</button>
+                </div>
+                <a href="/index.html" class="nav-btn block" data-i18n="nav_home">🏠 الرئيسية</a>
+                <a href="/orders.html" class="nav-btn block" data-i18n="nav_orders">📦 طلباتي</a>
+                <a href="/referral.html" class="nav-btn block" data-i18n="nav_referral">🎁 دعوة صديق</a>
+                <a href="/balance.html" class="nav-btn block" data-i18n="topup_balance_btn">💳 شحن الرصيد</a>
+                <button onclick="showAppDownloadModal(); closeMobileMenu();" class="nav-btn block" data-i18n="nav_app">📱 تحميل التطبيق</button>
+                <button onclick="showAdWatchModal(); closeMobileMenu();" class="nav-btn block" data-i18n="earn_points_btn">🎬 اكسب نقط</button>
+                <a href="/contact.html" class="nav-btn block relative">
+                    <span data-i18n="nav_support">🎧 الدعم الفني</span>
+                </a>
+                <a id="adminNavMobile" href="/admin/index.html" class="nav-btn hidden block text-red-400" data-i18n="nav_admin_panel">
+                    ⚙️ لوحة التحكم
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Homepage Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="text-center mb-12">
+            <div class="welcome-banner">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    ⚡
+                </div>
+                <h2 class="text-4xl font-bold mb-4 text-white" data-i18n="hero_title">مرحباً بك في Refresh</h2>
+                <p class="text-xl text-slate-200 mb-8" data-i18n="hero_subtitle">أفضل منصة لتزويد خدمات السوشيال ميديا بأسعار منافسة وجودة عالية</p>
+                <div class="flex justify-center space-x-4 rtl:space-x-reverse">
+                    <button onclick="scrollToServices()" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold glow" data-i18n="browse_services">تصفح الخدمات</button>
+                    <a href="/orders.html" class="bg-slate-800/70 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors inline-block" data-i18n="nav_orders_noicon">طلباتي</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Catalog Section -->
+        <section id="servicesSection" class="mb-12">
+            <h2 class="text-4xl font-bold text-center mb-4 text-glow" data-i18n="services_section_title">🎵 خدمات تيك توك 🎵</h2>
+
+            <!-- Individual Services -->
+            <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center" data-i18n="individual_prices_title">📌 الأسعار الفردية:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 service-grid">
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_views10k_title">👁️ 10,000 مشاهدة</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="15">15ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('views_10k')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_likes1k_title">❤️ 1,000 لايك</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="13.5">13.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('likes_1k')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_saves100_title">🔖 100 حفظ</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="3.5">3.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('saves_100')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_shares100_title">🔗 100 مشاركة</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="2.5">2.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('shares_100')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_followers1k_title">👤 100 متابع</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="15">15ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('followers_1k')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="svc_repost100_title">🔁 100 إعادة نشر (Repost)</h4>
+                        <div class="flex justify-center items-center">
+                            <span class="text-3xl font-bold text-blue-400 text-center mb-4 price-egp" data-egp="10">10ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('repost_100')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packages -->
+            <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center" data-i18n="packages_title">📦 الباقات الجاهزة للتفاعل:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 service-grid">
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="pkg_beginner_title">🌱 الباقة الأساسية</h4>
+                        <ul class="feature-check-list">
+                            <li data-i18n="pkg_beginner_f1">7,500 مشاهدة</li>
+                            <li data-i18n="pkg_beginner_f2">500 لايك</li>
+                            <li data-i18n="pkg_beginner_f3">13 حفظ</li>
+                            <li data-i18n="pkg_beginner_f4">30 مشاركة</li>
+                            <li data-i18n="pkg_beginner_f5">100 إعادة نشر</li>
+                        </ul>
+                        <div class="flex justify-center items-center">
+                            <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="21.5">21.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('package_beginner')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                    
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="pkg_basic_title">🚀 باقة الانطلاقة</h4>
+                        <ul class="feature-check-list">
+                            <li data-i18n="pkg_basic_f1">15,000 مشاهدة</li>
+                            <li data-i18n="pkg_basic_f2">750 لايك</li>
+                            <li data-i18n="pkg_basic_f3">25 حفظ</li>
+                            <li data-i18n="pkg_basic_f4">80 مشاركة</li>
+                            <li data-i18n="pkg_basic_f5">250 إعادة نشر</li>
+                        </ul>
+                        <div class="flex justify-center items-center">
+                            <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="45.5">45.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('package_basic')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="pkg_intensive_title">📈 باقة الصعود</h4>
+                        <ul class="feature-check-list">
+                            <li data-i18n="pkg_intensive_f1">25,000 مشاهدة</li>
+                            <li data-i18n="pkg_intensive_f2">1,500 لايك</li>
+                            <li data-i18n="pkg_intensive_f3">50 حفظ</li>
+                            <li data-i18n="pkg_intensive_f4">130 مشاركة</li>
+                            <li data-i18n="pkg_intensive_f5">500 إعادة نشر</li>
+                        </ul>
+                        <div class="flex justify-center items-center">
+                            <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="84.5">84.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('package_intensive')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+
+                    <div class="most-popular-wrapper">
+                        <div class="most-popular-badge" data-i18n="badge_most_popular">⭐ الأكثر طلبًا</div>
+                        <div class="service-card-enhanced most-popular">
+                            <h4 class="text-xl font-semibold mb-2 text-center mt-2" data-i18n="pkg_focused_title">🔥 باقة التريند</h4>
+                            <ul class="feature-check-list">
+                                <li data-i18n="pkg_focused_f1">50,000 مشاهدة</li>
+                                <li data-i18n="pkg_focused_f2">2,500 لايك</li>
+                                <li data-i18n="pkg_focused_f3">75 حفظ</li>
+                                <li data-i18n="pkg_focused_f4">250 مشاركة</li>
+                                <li data-i18n="pkg_focused_f5">1000 إعادة نشر</li>
+                            </ul>
+                            <div class="flex justify-center items-center">
+                                <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="163.5">163.5ج</span>
+                            </div>
+                            <button onclick="showServiceDetails('package_focused')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                        </div>
+                    </div>
+
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="pkg_elite_title">📡 باقة الانتشار</h4>
+                        <ul class="feature-check-list">
+                            <li data-i18n="pkg_elite_f1">100,000 مشاهدة</li>
+                            <li data-i18n="pkg_elite_f2">5,000 لايك</li>
+                            <li data-i18n="pkg_elite_f3">125 حفظ</li>
+                            <li data-i18n="pkg_elite_f4">400 مشاركة</li>
+                            <li data-i18n="pkg_elite_f5">1500 إعادة نشر</li>
+                        </ul>
+                        <div class="flex justify-center items-center">
+                            <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="286.5">286.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('package_elite')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+
+                    <div class="service-card-enhanced">
+                        <h4 class="text-xl font-semibold mb-2 text-center" data-i18n="pkg_vip_title">👑 باقة النخبة</h4>
+                        <ul class="feature-check-list">
+                            <li data-i18n="pkg_vip_f1">250,000 مشاهدة</li>
+                            <li data-i18n="pkg_vip_f2">10,000 لايك</li>
+                            <li data-i18n="pkg_vip_f3">250 حفظ</li>
+                            <li data-i18n="pkg_vip_f4">750 مشاركة</li>
+                            <li data-i18n="pkg_vip_f5">2500 إعادة نشر</li>
+                        </ul>
+                        <div class="flex justify-center items-center">
+                            <span class="text-2xl font-bold text-center text-green-400 mb-4 price-egp" data-egp="590.5">590.5ج</span>
+                        </div>
+                        <button onclick="showServiceDetails('package_vip')" class="btn-details w-full mt-3" data-i18n="details_btn">تفاصيل</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <div class="icon">✅</div>
+                    <div class="title" data-i18n="trust1_title">تفاعل حقيقي</div>
+                    <div class="desc" data-i18n="trust1_desc">جودة مضمونة على كل الطلبات</div>
+                </div>
+                <div class="trust-badge">
+                    <div class="icon">⚡</div>
+                    <div class="title" data-i18n="trust2_title">تنفيذ سريع</div>
+                    <div class="desc" data-i18n="trust2_desc">التسليم عادة خلال ساعة بإذن الله</div>
+                </div>
+                <div class="trust-badge">
+                    <div class="icon">💳</div>
+                    <div class="title" data-i18n="trust3_title">شحن مرن</div>
+                    <div class="desc" data-i18n="trust3_desc">فودافون كاش أو تيلدا</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Stats Counters Section -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 stats-grid">
+            <div class="stats-card p-6 rounded-xl text-center card-hover">
+                <div class="text-3xl mb-2">🔥</div>
+                <div class="text-2xl font-bold text-blue-400" id="liveCompletedToday">0</div>
+                <div class="text-slate-400" data-i18n="stat_today">طلب تم تنفيذه النهاردة</div>
+            </div>
+            <div class="stats-card p-6 rounded-xl text-center card-hover">
+                <div class="text-3xl mb-2">📦</div>
+                <div class="text-2xl font-bold text-purple-400" id="liveTotalOrders">0</div>
+                <div class="text-slate-400" data-i18n="stat_total_orders">طلب منذ انطلاق الموقع</div>
+            </div>
+            <div class="stats-card p-6 rounded-xl text-center card-hover">
+                <div class="text-3xl mb-2">👥</div>
+                <div class="text-2xl font-bold text-yellow-400" id="liveTotalCustomers">0</div>
+                <div class="text-slate-400" data-i18n="stat_total_customers">عميل مسجل</div>
+            </div>
+            <div class="stats-card p-6 rounded-xl text-center card-hover">
+                <div class="text-3xl mb-2">⚡</div>
+                <div class="text-2xl font-bold text-green-400">24/7</div>
+                <div class="text-slate-400" data-i18n="stat_support">دعم فني</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Service Details & Ordering Modal -->
+    <div id="serviceDetailsModal" class="service-details-modal">
+        <div class="service-details-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="serviceTitle">ℹ️ تفاصيل الخدمة</h3>
+                <button onclick="closeServiceModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div id="serviceInfo" class="mb-6"></div>
+            <form id="serviceOrderForm" class="space-y-4" onsubmit="handleServiceOrder(event)">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="content_link_label">رابط المحتوى</label>
+                    <input type="url" id="contentLink" class="form-input w-full" placeholder="https://www.tiktok.com/@username/video/..." required>
+                </div>
+                <div id="quantityField">
+                    <label class="block text-sm font-medium mb-2" data-i18n="quantity_label">الكمية</label>
+                    <input type="number" id="quantity" class="form-input w-full" min="1" value="1" oninput="calculateTotalPrice()">
+                    <div id="quantityError" class="text-red-400 text-sm mt-1 hidden"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="notes_label">ملاحظات (اختياري)</label>
+                    <textarea id="orderNotes" class="form-input w-full" rows="3" data-i18n-placeholder="notes_placeholder" placeholder="أي ملاحظات إضافية..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="discount_code_label">كود خصم (اختياري)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="discountCodeInput" class="form-input w-full" data-i18n-placeholder="discount_code_placeholder" placeholder="اكتب الكود لو عندك">
+                        <button type="button" onclick="applyDiscountCodeToOrder()" class="btn-primary px-4" data-i18n="check_btn">تحقق</button>
+                    </div>
+                    <div id="discountCodeMsg" class="text-sm mt-1"></div>
+                </div>
+                <div id="usePointsField" class="bg-slate-700/50 p-4 rounded-lg hidden">
+                    <label class="flex items-center gap-2 font-semibold cursor-pointer mb-2">
+                        <input type="checkbox" id="usePointsCheckbox" onchange="togglePointsUsage()">
+                        <span><span data-i18n="use_points_checkbox_label">🎯 ادفع جزء من الطلب بنقاطك (متاح: </span><span id="availablePointsLabel">0</span> <span data-i18n="points_unit">نقطة</span>)</span>
+                    </label>
+                    <div id="pointsUsageInputWrap" class="hidden">
+                        <input type="range" id="pointsUsageInput" min="0" step="1" value="0" class="w-full" oninput="calculateTotalPrice()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span><span data-i18n="points_will_use_label">هتستخدم: </span><span id="pointsUsageValue">0</span> <span data-i18n="points_unit">نقطة</span></span>
+                            <span>= <span id="pointsUsageCash">0.00</span> <span data-i18n="points_discount_label">جنيه خصم</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-700/50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-semibold" data-i18n="total_price_label">إجمالي السعر:</span>
+                        <span class="text-xl font-bold text-green-400" id="totalPrice">0 جنيه</span>
+                    </div>
+                    <div id="priceBreakdown" class="text-xs text-slate-400"></div>
+                </div>
+                <button type="submit" class="btn-primary w-full py-3" data-i18n="order_service_btn">طلب الخدمة</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="auth-form">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold mb-2" data-i18n="login_title">🔑 تسجيل الدخول</h2>
+                <p class="text-slate-400" data-i18n="login_subtitle">مرحباً بعودتك إلى Refresh</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="phone_or_username_label">رقم الهاتف أو اليوزر نيم</label>
+                    <input type="text" id="loginPhone" class="auth-input" placeholder="أدخل رقم هاتفك أو اليوزر نيم" data-i18n-placeholder="phone_or_username_placeholder" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="password_label">كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="loginPassword" class="auth-input" placeholder="أدخل كلمة المرور" data-i18n-placeholder="password_placeholder" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)" aria-label="إظهار/إخفاء كلمة المرور" data-i18n-aria="toggle_password_aria">👁️</button>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="rememberMe" class="mr-2">
+                    <label for="rememberMe" class="text-sm mr-2" data-i18n="remember_me">تذكرني</label>
+                </div>
+                <button type="submit" class="auth-btn" data-i18n="login_btn">تسجيل الدخول</button>
+            </form>
+            <div class="text-center mt-4">
+                <p class="text-slate-400"><span data-i18n="no_account">ليس لديك حساب؟</span>
+                    <a href="#" onclick="hideLoginModal(); showSignupModal();" class="auth-link text-blue-400" data-i18n="signup_link">إنشاء حساب جديد</a>
+                </p>
+            </div>
+            <button onclick="hideLoginModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="signup-form-improved">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold mb-2" data-i18n="signup_title">📝 إنشاء حساب جديد</h2>
+            </div>
+            <form id="signupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="full_name_label">الاسم الكامل</label>
+                    <input type="text" id="signupName" class="auth-input" placeholder="أدخل اسمك الكامل" data-i18n-placeholder="full_name_placeholder" maxlength="60" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="phone_label">رقم الهاتف</label>
+                    <input type="tel" id="signupPhone" class="auth-input" placeholder="01xxxxxxxxx" data-i18n-placeholder="phone_placeholder" required maxlength="11">
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="phone_format_hint">لازم يكون 11 رقم ويبدأ بـ 01</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="username_label">اليوزر نيم</label>
+                    <input type="text" id="signupUsername" class="auth-input" placeholder="اختر يوزر نيم خاص بيك" data-i18n-placeholder="username_placeholder" required minlength="3" maxlength="20" autocomplete="off">
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="username_format_hint">من 3 لـ 20 خانة، ولازم يحتوي على حرف ورقم على الأقل (والرمز المميز . _ - اختياري)</p>
+                    <p id="usernameCheckStatus" class="text-xs mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="password_label">كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="signupPassword" class="auth-input" placeholder="أدخل كلمة مرور قوية" data-i18n-placeholder="strong_password_placeholder" required minlength="6" maxlength="15" oninput="updatePasswordStrengthMeter('signupPassword', 'signupPasswordStrength')">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)" aria-label="إظهار/إخفاء كلمة المرور" data-i18n-aria="toggle_password_aria">👁️</button>
+                    </div>
+                    <div class="password-strength-meter hidden" id="signupPasswordStrength">
+                        <div class="password-strength-bar-track"><div class="password-strength-bar-fill"></div></div>
+                        <span class="password-strength-label"></span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="confirm_password_label">تأكيد كلمة المرور</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="signupConfirmPassword" class="auth-input" placeholder="أعد إدخال كلمة المرور" data-i18n-placeholder="confirm_password_placeholder" required minlength="6" maxlength="15">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordField(this)" aria-label="إظهار/إخفاء كلمة المرور" data-i18n-aria="toggle_password_aria">👁️</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" data-i18n="referral_code_label">كود الدعوة (اختياري)</label>
+                    <input type="text" id="signupReferralCode" class="auth-input" placeholder="لو حد رشحلك الموقع اكتب كوده هنا" data-i18n-placeholder="referral_code_placeholder">
+                </div>
+                <button type="submit" id="signupSubmitBtn" class="auth-btn" data-i18n="signup_btn" disabled>إنشاء الحساب</button>
+            </form>
+            <div class="text-center mt-4">
+                <p class="text-slate-400"><span data-i18n="have_account">لديك حساب بالفعل؟</span>
+                    <a href="#" onclick="hideSignupModal(); showLoginModal();" class="auth-link text-blue-400" data-i18n="login_link">تسجيل الدخول</a>
+                </p>
+            </div>
+            <button onclick="hideSignupModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+        </div>
+    </div>
+
+    <!-- Admin Star Access Modal -->
+    <div id="adminModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="modal-content">
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-4 text-center">🔐 دخول المدير</h3>
+                <p class="text-slate-400 text-sm mb-4 text-center">لازم تكون مسجل دخول بحساب مفعّل عليه صلاحية أدمن أولاً.</p>
+                <form id="adminLoginForm" class="space-y-4">
+                    <button type="submit" class="btn-admin w-full py-3">فتح لوحة التحكم</button>
+                </form>
+                <button onclick="hideAdminModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blocked User Notice Modal -->
+    <div id="blockedUserModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="modal-content">
+            <div class="p-6 text-center">
+                <div class="text-5xl mb-3">⛔</div>
+                <h3 class="text-xl font-bold mb-2 text-red-400" data-i18n="blocked_modal_title">تم حظر هذا الحساب</h3>
+                <p class="text-slate-300 mb-4" data-i18n="blocked_modal_desc">حسابك محظور حاليًا ومينفعش تدخل بيه على الموقع. لو حاسس إن ده غلط أو عايز تستفسر، تواصل مع فريق الدعم:</p>
+                <a href="https://wa.me/201013062296" target="_blank" rel="noopener" class="btn-primary w-full py-3 inline-flex items-center justify-center gap-2 mb-2">
+                    <i class="fa-brands fa-whatsapp text-xl"></i>
+                    <span dir="ltr">01013062296</span>
+                </a>
+                <button onclick="hideBlockedUserModal()" class="w-full py-2 mt-2 text-slate-400 hover:text-white" data-i18n="close_btn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Watch Ad Modal -->
+    <div id="adWatchModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="modal-content">
+            <div class="p-6 text-center">
+                <h3 class="text-xl font-bold mb-2">🎬 شاهد إعلان واكسب نقط</h3>
+                <p class="text-slate-400 text-sm mb-4">كل إعلان = 5 نقط (0.50 جنيه) بتضاف لرصيدك فورًا. متاح تكرر كل 3 دقايق.</p>
+                <div id="adBlockerWarning" class="hidden mb-4 p-4 rounded-lg" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4);">
+                    <p class="text-red-400 font-semibold mb-2">⚠️ لاحظنا إن عندك أداة حجب إعلانات (Ad-blocker) شغالة</p>
+                    <p class="text-slate-300 text-sm mb-3">لازم توقفها للموقع ده الأول عشان تقدر تشاهد الإعلان وتستلم نقطك.</p>
+                    <button onclick="recheckAdBlocker()" class="btn-primary px-4 py-2 text-sm">🔄 تحقق تاني بعد ما توقفها</button>
+                </div>
+                <div id="adWatchBody">
+                    <div id="adSlotContainer" class="mb-4" style="min-height:250px; display:flex; align-items:center; justify-content:center; background:#0f172a; border-radius:8px; overflow:hidden;">
+                        <span class="text-slate-400">إعلان ترويجي...</span>
+                    </div>
+                    <button id="adTimerBtn" class="btn-primary w-full py-3" disabled>⏳ استنى 30 ثانية...</button>
+                </div>
+                <button onclick="hideAdWatchModal()" class="w-full py-2 mt-2 text-slate-400 hover:text-white">إغلاق</button>
+                <button onclick="hideAdWatchModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Download Modal -->
+    <div id="appDownloadModal" class="modal fixed inset-0 z-50 hidden">
+        <div class="modal-content">
+            <div class="p-6 text-center">
+                <div class="text-5xl mb-3">📱</div>
+                <h3 class="text-xl font-bold mb-2" data-i18n="app_download_title">حمّل تطبيق تفعيل</h3>
+                <p class="text-slate-400 text-sm mb-6" data-i18n="app_download_desc">نفس الموقع بالظبط، في تطبيق واحد على جهازك — نفس حسابك ونفس رصيدك.</p>
+                <a id="appDownloadLink" href="#" target="_blank" rel="noopener" class="btn-primary w-full py-3 inline-block" data-i18n="app_download_btn">⬇️ تحميل APK</a>
+                <p class="text-slate-500 text-xs mt-4" data-i18n="app_download_note">التطبيق لأجهزة Android فقط حاليًا. لازم تسمح بـ "التثبيت من مصادر غير معروفة" أول مرة.</p>
+                <button onclick="hideAppDownloadModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white">✕</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
